@@ -3,7 +3,7 @@ from torch.utils.data import DataLoader
 from torchvision.datasets import MNIST
 from torchvision.transforms import ToTensor, Normalize, Compose
 
-def get_data(data_root="../../datasets", batch_size_train=256, batch_size_test=512, **kwargs):
+def get_data(data_root="datasets/", batch_size_train=256, batch_size_test=512, **kwargs):
     # Create the folder where the data will be downloaded
     # exist_ok avoid exception if the folder already exists
     os.makedirs(data_root, exist_ok=True)
