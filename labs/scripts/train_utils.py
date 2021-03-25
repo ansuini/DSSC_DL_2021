@@ -19,8 +19,8 @@ def accuracy(nn_output: Tensor, ground_truth: Tensor, k: int=1):
     # produce tensor of booleans - at which position of the nn output is the correct class located?
     correct_items = (nn_out_classes == ground_truth_vec)
     # now getting the accuracy is easy, we just operate the sum of the tensor and divide it by the number of examples
-    acc = correct_items.sum() / nn_output.shape[0]
-    return acc.item()
+    acc = correct_items.sum().item() / nn_output.shape[0]
+    return acc
 
 class AverageMeter(object):
     '''
