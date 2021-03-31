@@ -20,7 +20,7 @@ def get_data(data_root="datasets/", batch_size_train=256, batch_size_test=512, *
 
     # We download the train and the test dataset in the given root and applying the given transforms
     trainset = MNIST(data_root, train=True, transform=transforms, download=True)
-    testset = MNIST(data_root, train=True, transform=transforms, download=True)
+    testset = MNIST(data_root, train=False, transform=transforms, download=True)
 
     # We feed our datasets into DataLoaders, which automatically manage the split into batches for SGD
     # shuffle indicates whether the data needs to be shuffled before the creation of batches
