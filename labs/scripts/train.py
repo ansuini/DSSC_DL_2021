@@ -1,8 +1,11 @@
 import torch
 from .train_utils import AverageMeter, accuracy
+from .torch_utils import use_gpu_if_possible
 
-def train_epoch(model, dataloader, loss_fn, optimizer, loss_meter, performance_meter, performance): # note: I've added a generic performance to replace accuracy
+def train_epoch(model, dataloader, loss_fn, optimizer, loss_meter, performance_meter, performance, device): # note: I've added a generic performance to replace accuracy
     for X, y in dataloader:
+        X = X.to(device)
+        y = y.to(device)
         # 1. reset the gradients previously accumulated by the optimizer
         #    this will avoid re-using gradients from previous loops
         optimizer.zero_grad() 
@@ -21,12 +24,16 @@ def train_epoch(model, dataloader, loss_fn, optimizer, loss_meter, performance_m
         loss_meter.update(val=loss.item(), n=X.shape[0])
         performance_meter.update(val=acc, n=X.shape[0])
 
-def train_model(model, dataloader, loss_fn, optimizer, num_epochs, checkpoint_loc=None, checkpoint_name="checkpoint.pt", performance=accuracy, lr_scheduler=None):
+def train_model(model, dataloader, loss_fn, optimizer, num_epochs, checkpoint_loc=None, checkpoint_name="checkpoint.pt", performance=accuracy, lr_scheduler=None, device=None):
 
     # create the folder for the checkpoints (if it's not None)
     if checkpoint_loc is not None:
         os.makedirs(checkpoint_loc, exist_ok=True)
+
+    if device is None:
+        device = use_gpu_if_possible()
     
+    model = model.to(device)
     model.train()
 
     # epoch loop
@@ -56,16 +63,24 @@ def train_model(model, dataloader, loss_fn, optimizer, num_epochs, checkpoint_lo
 
     return loss_meter.sum, performance_meter.avg
 
-def test_model(model, dataloader, performance=accuracy, loss_fn=None):
+def test_model(model, dataloader, performance=accuracy, loss_fn=None, device=None):
     # create an AverageMeter for the loss if passed
     if loss_fn is not None:
         loss_meter = AverageMeter()
     
+    if device is None:
+        device = use_gpu_if_possible()
+
+    model = model.to(device)
+
     performance_meter = AverageMeter()
 
     model.eval()
     with torch.no_grad():
         for X, y in dataloader:
+            X = X.to(device)
+            y = y.to(device)
+            
             y_hat = model(X)
             loss = loss_fn(y_hat, y) if loss_fn is not None else None
             acc = performance(y_hat, y)

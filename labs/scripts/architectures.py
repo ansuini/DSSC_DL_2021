@@ -26,9 +26,11 @@ class MLP(nn.Module):
         return self.layers(X)
 
 class MLPCustom(nn.Module):
-    def __init__(self, layers_list:list):
+    def __init__(self, layers_list:list, flatten_input=True):
         super().__init__()
         layers = self._build_layers(layers_list)
+        if flatten_input:
+            layers.insert(0, nn.Flatten())
         self.layers = nn.Sequential(*layers)
 
     def _build_layers(self, layers_list:list):
@@ -43,7 +45,7 @@ class MLPCustom(nn.Module):
                 l_dict["n_in"] = prev_in
             
             layers.extend(self._build_single_layer(**l_dict))
-            prev_in = l_dict["n_in"]
+            prev_in = l_dict["n_out"]
         return layers
 
     def _build_single_layer(self, n_in:int, n_out:int, activ=nn.ReLU, batchnorm=True, dropout_p=None, bias=True):
