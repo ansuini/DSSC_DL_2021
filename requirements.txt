@@ -1,2 +1,3 @@
 matplotlib
 requests
+opencv-python
