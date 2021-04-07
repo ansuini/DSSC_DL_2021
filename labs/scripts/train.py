@@ -1,8 +1,9 @@
 import torch
+import os
 from .train_utils import AverageMeter, accuracy
 from .torch_utils import use_gpu_if_possible
 
-def train_epoch(model, dataloader, loss_fn, optimizer, loss_meter, performance_meter, performance, device): # note: I've added a generic performance to replace accuracy
+def train_epoch(model, dataloader, loss_fn, optimizer, loss_meter, performance_meter, performance, device, lr_scheduler): # note: I've added a generic performance to replace accuracy
     for X, y in dataloader:
         X = X.to(device)
         y = y.to(device)
@@ -18,13 +19,15 @@ def train_epoch(model, dataloader, loss_fn, optimizer, loss_meter, performance_m
         loss.backward()
         # 5. update the value of the params
         optimizer.step()
+        if lr_scheduler is not None:
+            lr_scheduler.step()
         # 6. calculate the accuracy for this mini-batch
         acc = performance(y_hat, y)
         # 7. update the loss and accuracy AverageMeter
         loss_meter.update(val=loss.item(), n=X.shape[0])
         performance_meter.update(val=acc, n=X.shape[0])
 
-def train_model(model, dataloader, loss_fn, optimizer, num_epochs, checkpoint_loc=None, checkpoint_name="checkpoint.pt", performance=accuracy, lr_scheduler=None, device=None):
+def train_model(model, dataloader, loss_fn, optimizer, num_epochs, checkpoint_loc=None, checkpoint_name="checkpoint.pt", performance=accuracy, lr_scheduler=None, device=None, lr_scheduler_step_on_epoch=True):
 
     # create the folder for the checkpoints (if it's not None)
     if checkpoint_loc is not None:
@@ -44,8 +47,10 @@ def train_model(model, dataloader, loss_fn, optimizer, num_epochs, checkpoint_lo
 
         # added print for LR
         print(f"Epoch {epoch+1} --- learning rate {optimizer.param_groups[0]['lr']:.5f}")
+        
+        lr_scheduler_batch = lr_scheduler if not lr_scheduler_step_on_epoch else None
 
-        train_epoch(model, dataloader, loss_fn, optimizer, loss_meter, performance_meter, performance)
+        train_epoch(model, dataloader, loss_fn, optimizer, loss_meter, performance_meter, performance, device, lr_scheduler_batch)
 
         print(f"Epoch {epoch+1} completed. Loss - total: {loss_meter.sum} - average: {loss_meter.avg}; Performance: {performance_meter.avg}")
 
@@ -58,7 +63,7 @@ def train_model(model, dataloader, loss_fn, optimizer, num_epochs, checkpoint_lo
             }
             torch.save(checkpoint_dict, os.path.join(checkpoint_loc, checkpoint_name))
         
-        if lr_scheduler is not None:
+        if lr_scheduler is not None and lr_scheduler_step_on_epoch:
             lr_scheduler.step()
 
     return loss_meter.sum, performance_meter.avg
