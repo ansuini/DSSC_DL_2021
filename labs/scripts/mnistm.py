@@ -27,7 +27,7 @@ class MNISTM(data.Dataset):
     training_file = "mnist_m_train.pt"
     test_file = "mnist_m_test.pt"
 
-    def __init__(self, root, mnist_root="datasets/MNIST", train=True, transform=None, target_transform=None, download=False):
+    def __init__(self, root, mnist_root="datasets", train=True, transform=None, target_transform=None, download=False):
         """Init MNIST-M dataset."""
         super(MNISTM, self).__init__()
         self.root = os.path.expanduser(root)
