@@ -64,7 +64,10 @@ def train_model(model, dataloader, loss_fn, optimizer, num_epochs, checkpoint_lo
             torch.save(checkpoint_dict, os.path.join(checkpoint_loc, checkpoint_name))
         
         if lr_scheduler is not None and lr_scheduler_step_on_epoch:
-            lr_scheduler.step()
+            if isinstance(lr_scheduler, torch.optim.lr_scheduler.ReduceLROnPlateau):
+                lr_scheduler.step(loss_meter.avg)
+            else:
+                lr_scheduler.step()
 
     return loss_meter.sum, performance_meter.avg
 
